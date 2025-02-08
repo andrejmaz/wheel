@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо фортуны</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        var tg = window.Telegram?.WebApp;
+    
+        const initTelegramWebApp = () => {
+          if (!tg || !tg.initDataUnsafe?.user) {
+            console.log('Это не WebApp или пользователь не авторизован');
+            return;
+          }
+    
+          // Инициализация Telegram WebApp
+          tg.expand();
+          tg.ready();
+          tg.enableClosingConfirmation();
+    
+          // Настройка цветов
+          const setColor = (method, color) => {
+            tg[method]?.(color) ||
+              tg.postEvent?.(`web_app_set_${method}`, JSON.stringify({ color })) ||
+              window.parent.postMessage(
+                { eventType: `web_app_set_${method}`, eventData: { color } },
+                '*'
+              );
+          };
+    
+          setColor("setHeaderColor", "#000");
+          setColor("setBackgroundColor", "#000");
+    
+          // Отключение свайпов
+          if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+            tg.disableVerticalSwipes?.();
+          } else {
+            document.body.style.overflow = "hidden";
+          }
+    
+          // Подтверждение при закрытии
+          window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = 'Вы уверены, что хотите закрыть приложение?';
+          });
+    
+          // Обработка ошибок
+          window.addEventListener('error', (e) => {
+            console.error('Ошибка в WebApp:', e.message);
+          });
+        };
+    
+        const loadWheelContent = async () => {
+          try {
+            const response = await fetch('/webhook/wheel/check', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                tg_id: tg.initDataUnsafe.user.id,
+                first_name: tg.initDataUnsafe.user.first_name,
+                username: tg.initDataUnsafe.user.username,
+                photo_url: tg.initDataUnsafe.user.photo_url,
+              }),
+            });
+    
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    
+            const data = await response.json();
+            if (data.html) {
+              const wheelContainer = document.querySelector('.wheel-container');
+              const loadDiv = document.querySelector('.load-container');
+    
+              // Загрузка контента
+              wheelContainer.innerHTML = data.html;
+    
+              // Удаление индикатора загрузки
+              setTimeout(() => loadDiv.style.opacity = '0', 1000);
+              setTimeout(() => loadDiv.remove(), 500);
+            } else {
+              throw new Error('HTML not found in the response.');
+            }
+          } catch (error) {
+            console.error('Error:', error.message);
+          }
+        };
+    
+        // Инициализация
+        initTelegramWebApp();
+        window.addEventListener('load', loadWheelContent);
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    <script src="/logicer.js"></script>
+    <script src="logicerser.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat Alternates', sans-serif;
+            background-color: #0D0D0D;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+
+    <section id="wheel">
+        <div class="the_wheel_title">
+            <h1>Колесо <span class="accent-word">фортуны</span></h1>
+            <p>Подарите себе момент радости 🤗</p>
+        </div>
+        
+        <div class="the_wheel">
+            <div class="wheel-container">
+                <canvas id="canvas" class="wheel-canvas" width="480" height="480" data-responsiveMinWidth="320" data-responsiveScaleHeight="true">
+                <p style="color: white" align="center">Ваш браузер не поддерживает canvas.</p>
+                </canvas>
+            </div>
+        </div>
+        
+        <div class="button-block">
+            <button class="styled-button" onClick="startSpin();">Испытать удачу</button>
+        </div>
+        <style>
+            /* Стили для текста */
+            p, span, h1, h2, h3{
+                color:#fff;
+            }
+
+            .the_wheel_title{
+                margin: 20px 10px 40px 10px;
+            }
+
+            .the_wheel_title p,
+            .the_wheel_title  h1 {
+                font-family: Montserrat Alternates;
+                text-align:center;
+            }
+
+            .accent-word{
+                color:#1866F1;
+            }
+
+            /* Стили для колеса */
+            .the_wheel {
+                position: relative;
+            }
+            .the_wheel::after {
+                content: "";
+                position: absolute;
+                top: -15px;
+                left: calc(50% - 25px);
+                width: 0; 
+                height: 0;
+                border-left: 25px solid transparent;
+                border-right: 25px solid transparent;
+                border-top: 50px solid #1866F1;
+                -webkit-filter: drop-shadow(2px 2px 5px rgba(0,0,0,.5));
+                filter: drop-shadow(2px 2px 5px rgba(0,0,0,.5));
+                z-index: 2;
+            }
+
+            .wheel-container{
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+
+            canvas {
+                width: 100%;
+                max-width: 480px;
+            }
+
+            /* Прочие элементы */
+            .button-block{
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+
+            .styled-button {
+                background-color: #1866F1;
+                color: #ffffff;
+                border: none;
+                border-radius: 8px;
+                padding: 16px 54px;
+                font-size: 16px;
+                font-weight: bold;
+                text-transform: uppercase;
+                cursor: pointer;
+                outline: none;
+                transition: all 0.3s ease;
+                margin: 30px 10px;
+            }
+
+            .styled-button:hover {
+                background-color: #1846F1;
+                transform: translateY(-4px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            }
+
+            .styled-button:active {
+                background-color: #1846F1;
+                transform: translateY(1px);
+                box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            }
+
+            .styled-button:focus {
+                outline: none;
+            }
+        </style>
+    </section>
+
+    <section id="wheel-no-access">
+        <div class="the_wheel_no-accec">
+            <div class="the_wheel_title">
+                <h1><span class="accent-word">Колесо недоступно</span></h1><br>
+                <p>Для повторного участия приобретите любой товар нашего бренда ⤵</p>
+            </div>
+            
+            <div class="button-block">
+                <button class="styled-button" onclick="window.location.href='https://bronks.creatium.site/';">Открыть магазин</button>
+            </div>
+            
+            <div class="the_wheel_title">
+                <p><i>1 уникальный отзыв = 1 вращение</i></p>
+            </div>
+            
+        </div>
+
+            <style>
+                #wheel-no-access{padding:0;}
+
+                .the_wheel_no-accec {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    text-align: center;
+                    box-sizing: border-box;
+                }
+
+                p, span, h1, h2, h3{
+                    color:#fff;
+                }
+
+                .the_wheel_title{
+                    margin: 20px 10px;
+                }
+
+                .the_wheel_title p,
+                .the_wheel_title  h1 {
+                    font-family: Montserrat Alternates;
+                    text-align:center;
+                }
+
+                span.accent-word{
+                    color:#1866F1;
+                }
+
+                .button-block{
+                    display: flex;
+                    flex-direction: column;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                }
+
+                .styled-button {
+                    background-color: #1866F1;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 16px 54px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    outline: none;
+                    transition: all 0.3s ease;
+                    margin: 20px 10px;
+                }
+
+                .styled-button:hover {
+                    background-color: #1846F1;
+                    transform: translateY(-4px);
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+                }
+
+                .styled-button:active {
+                    background-color: #1846F1;
+                    transform: translateY(1px);
+                    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+                }
+
+                .styled-button:focus {
+                    outline: none;
+                }
+            </style>
+    </section>
+
+
+    <script>
+        let wheelOptions = {
+            'numSegments'  : 10,
+            /*'drawText'     : false,*/
+            'drawMode'     : 'image',
+            'imageOverlay' : true,
+            /*'responsive'   : true,*/
+            'lineWidth'    : 0,
+            'strokeStyle'  : 'transparent',
+            //'fillStyle'    : 'transparent',
+            'textFillStyle': 'transparent',
+            /*'textFontSize' : 10,
+            'textFontWeight' : 400,
+            'textFontFamily':'Montserrat',*/
+            'outerRadius'  : 220,
+            //'innerRadius'  : 30,         
+            'innerStyle'   : 'white',  
+            'segments'     :
+            [
+                {   'text'  : "iPhine 15 256 GB",
+                },
+                {   'text'  : "1000 рублей на телефон",
+                },
+                {   'text'  : "Джоггеры арт.21520102",
+                },
+                {   'text'  : "5000 рублей на телефон",
+                },
+                {   'text'  : "Футболка арт.42243902",
+                },
+                {   'text'  : "500 рублей на телефон",
+                },
+                {   'text'  : "Бейсбола арт.88732046",
+                },
+                {   'text'  : "300 рублей на телефон",
+                },
+                {   'text'  : "Бейсболка арт.31667351",
+                },
+                {   'text'  : "150 рублей на телефон",
+                }
+            ],
+            'animation' :
+            {
+                'type'     : 'spinToStop',
+                'duration' : 8,
+                'spins'    : 8,
+                'callbackFinished' : alertPrize
+            },
+            'pins' :    
+            {
+                'number'      : 10,
+                'outerRadius' : 5,
+                'margin'      : -5,
+                'lineWidth'    : 2,
+                'fillStyle'   : '#fff',
+                'strokeStyle' : '#fff',
+                'responsive' : true
+            }
+        };
+        
+        let wheelSpinning = false;
+        
+        let theWheel = new Winwheel(Object.assign(wheelOptions, {'canvasId': 'canvas'}));
+        
+        let theWheelImg = new Image();
+        theWheelImg.onload = function() {
+            theWheel.wheelImage = theWheelImg;
+            theWheel.draw();
+            /*setTimeout(function(){
+                $(window).resize();
+            }, 1000);*/
+        }
+        theWheelImg.src = "https://files.salebot.pro/uploads/file_item/file/192012/Wheel.png";
+        theWheelImg.width = theWheelImg.height = 440;
+        
+        window.prizes = [
+            {
+                'sector': 1,
+                'offerId': 1,
+                'totalCnt': 0
+            },
+            {
+                'sector': 2,
+                'offerId': 2,
+                'totalCnt': 300
+            },
+            {
+                'sector': 3,
+                'offerId': 3,
+                'totalCnt': 350
+            },
+            {
+                'sector': 4,
+                'offerId': 4,
+                'totalCnt': 50
+            },
+            {
+                'sector': 5,
+                'offerId': 5,
+                'totalCnt': 400
+            },
+            {
+                'sector': 6,
+                'offerId': 6,
+                'totalCnt': 700
+            },
+            {
+                'sector': 7,
+                'offerId': 7,
+                'totalCnt': 600
+            },
+            {
+                'sector':8,
+                'offerId': 8,
+                'totalCnt': 1000
+            },
+            {
+                'sector': 9,
+                'offerId': 9,
+                'totalCnt': 500
+            },
+            {
+                'sector': 10,
+                'offerId': 10,
+                'totalCnt': 6000
+            }
+        ];
+        
+        
+        window.setPrizeCount = function (offerId, cnt) {
+            console.log(offerId, cnt);
+            for (let i = 0; i < prizes.length; i++) {
+                if (window.prizes[i].offerId == offerId) {
+                    window.prizes[i].totalCnt = window.prizes[i].totalCnt - cnt;
+                    if (window.prizes[i].totalCnt < 0) {
+                        window.prizes[i].totalCnt = 0;
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function getRandomIntInclusive(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        window.startSpin = function () {
+            if (wheelSpinning == false) {
+                wheelSpinning = true;
+                let spin_prizes = [];
+                for (let i = 0; i < window.prizes.length; i++) {
+                    spin_prizes = spin_prizes.concat(Array(window.prizes[i].totalCnt).fill(window.prizes[i]));
+                }
+                console.log(spin_prizes);
+                let prize = spin_prizes[getRandomIntInclusive(0, spin_prizes.length - 1)];
+        
+                theWheel.animation.stopAngle = theWheel.getRandomForSegment(prize.sector);
+                theWheel.startAnimation();
+            }
+        }
+        
+        function alertPrize(indicatedSegment) {
+            const sanitizedText = indicatedSegment.text.replace(/(\r\n|\n|\r)/gm, "");
+            recordSpinTime();
+            document.querySelector('.ml_quiz_free_answer').value = sanitizedText;
+            document.querySelector('.send_quiz-btn')?.onclick();
+        }
+        
+        function canSpinWheel() {
+            const lastSpinTime = localStorage.getItem('lastSpinTime');
+        
+            if (lastSpinTime) {
+                const lastSpinDate = new Date(lastSpinTime);
+                const now = new Date();
+        
+                // Проверяем, прошли ли 10 минут с последней прокрутки
+                const tenMinutes = 10 * 60 * 1000; // 10 минут в миллисекундах
+                if (now - lastSpinDate < tenMinutes) {
+                    return false; // Ещё не прошло 10 минут
+                }
+            }
+        
+            return true; // Можно прокрутить
+        }
+        
+        function recordSpinTime() {
+            localStorage.setItem('lastSpinTime', new Date().toISOString());
+        }
+        
+    </script>
+</body>
+</html>
