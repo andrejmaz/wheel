@@ -8,11 +8,12 @@
     <script> // Скрипты для Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp.initDataUnsafe.user) {
             var tg = window.Telegram?.WebApp || window.TelegramWebviewProxy;
-            var tg_name = window.Telegram.WebApp.initDataUnsafe.user.first_name;
+            var tg_name = window.Telegram.WebApp.initDataUnsafe.user.first_name || 'Гость';
             var tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
             var tg_username = window.Telegram.WebApp.initDataUnsafe.user.username;
+            var photo_url = window.Telegram.WebApp.initDataUnsafe.photo_url;
         } else {
-            var tg_name = 'Тестер';
+            var tg_name = 'Гость';
             var tg_id = 641638479;
             var tg_username = 'browser';
         }
@@ -21,12 +22,10 @@
             const tg = window.Telegram?.WebApp || window.TelegramWebviewProxy;
             
             if (window.Telegram && window.Telegram.WebApp.initDataUnsafe.user) {
-                // Основные настройки
                 tg.expand();
                 tg.ready();
                 tg.enableClosingConfirmation();
 
-                // Установка цветов
                 const headerColor = '#121212';
                 const backgroundColor = '#121212';
 
@@ -184,8 +183,8 @@
 <body class="sl-theme-dark">
 
     <header style="display: flex; align-items: center; gap: 10px;">
-        <sl-avatar image="https://cs13.pikabu.ru/post_img/big/2023/02/13/8/1676296366191520185.png"></sl-avatar>
-        <h3>Привет, Андрей!</h3>
+        <sl-avatar class="user-img" image=""></sl-avatar>
+        <h3>Привет, <span class="user-name"></span>!</h3>
     </header>
 
 
@@ -316,6 +315,10 @@
     <sl-dialog label="Поздравляем 🎉" class="prize-dialog">
         Ваш приз: <span class="prize-label"></span>
     </sl-dialog>
-      
+    
+    <script>
+        document.querySelector('.user-name').textContent = tg_name;
+        document.querySelector('.user-img').image = photo_url;
+    </script>
 </body>
 </html>
