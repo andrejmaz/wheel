@@ -20,6 +20,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --accent-color: #1866F1;
+        }
         html {
             margin: 0;
             padding: 0;
@@ -51,13 +54,24 @@
             height: 0;
             border-left: 25px solid transparent;
             border-right: 25px solid transparent;
-            border-top: 50px solid var(--sl-color-primary-500);
+            border-top: 50px solid var(--accent-color);
             -webkit-filter: drop-shadow(2px 2px 5px rgba(0,0,0,.5));
             filter: drop-shadow(2px 2px 5px rgba(0,0,0,.5));
             z-index: 2;
         }
         .accent-word{
-            color: var(--sl-color-primary-500);
+            color: var(--accent-color);
+        }
+        sl-button.wheel-btn::part(base) {
+            --sl-input-height-medium: 48px;
+            --sl-input-border-width: 4px;
+            border-radius: 25px;
+            background-color: #1866F1;
+            border-color: #5285dc;
+            color: white;
+            font-size: 1.125rem;
+            box-shadow: 0 2px 10px #0002;
+            transition: var(--sl-transition-medium) transform ease, var(--sl-transition-medium) border ease;
         }
     </style>
 </head>
@@ -74,32 +88,20 @@
             <h1>Колесо <span class="accent-word">фортуны</span></h1>
             <p>Подарите себе момент радости 🤗</p>
         </div>
-        
+
         <div class="the_wheel">
                 <canvas id="canvas" class="wheel-canvas" width="480" height="480" data-responsiveMinWidth="320" data-responsiveScaleHeight="true">
                     <p style="color: white" align="center">Ваш браузер не поддерживает canvas.</p>
                 </canvas>
         </div>
-
-        <sl-button class="wheel-spin" variant="primary" size="medium" style="width: 100%; margin-bottom: 1rem;" onClick="startSpin();">Испытать удачу</sl-button>
+        <p style="text-align: center; font-weight: 500;margin: 20px 0 30px 0;">Доступно прокрутов: <span class="accent-word">12</span></p>
+        <sl-button class="wheel-btn" variant="primary" size="medium" style="width: 100%; margin-bottom: 1rem;" onClick="startSpin();">Испытать удачу</sl-button>
     </section>
 
-    <section id="wheel-no-access" style="display: none;">
-        <div class="the_wheel_no-accec">
-            <div class="the_wheel_title">
-                <h1><span class="accent-word">Колесо недоступно</span></h1><br>
-                <p>Для повторного участия приобретите любой товар нашего бренда ⤵</p>
-            </div>
-            
-            <div class="button-block">
-                <button class="styled-button" onclick="window.location.href='https://bronks.creatium.site/';">Открыть магазин</button>
-            </div>
-            
-            <div class="the_wheel_title">
-                <p><i>1 уникальный отзыв = 1 вращение</i></p>
-            </div>
-            
-        </div>
+    <section id="wheel-no-spins" style="display: none;">
+    </section>
+
+    <section id="wheel-ref" style="display: none;">
     </section>
 
     <script>
@@ -169,7 +171,7 @@
         window.startSpin = function () {
             if (wheelSpinning == false) {
                 wheelSpinning = true;
-                document.querySelector('.wheel-spin').disabled = true;
+                document.querySelector('.wheel-btn').disabled = true;
                 let prize = Math.floor(Math.random() * 10) + 1;
                 theWheel.animation.stopAngle = theWheel.getRandomForSegment(prize);
                 theWheel.startAnimation();
