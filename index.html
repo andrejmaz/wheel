@@ -6,7 +6,113 @@
     <title>Колесо фортуны</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script> // Скрипты для Telegram WebApp
-        var tg_id = 641638479;
+        if (window.Telegram && window.Telegram.WebApp.initDataUnsafe.user) {
+            var tg = window.Telegram?.WebApp || window.TelegramWebviewProxy;
+            var tg_name = window.Telegram.WebApp.initDataUnsafe.user.first_name;
+            var tg_id = window.Telegram.WebApp.initDataUnsafe.user.id;
+            var tg_username = window.Telegram.WebApp.initDataUnsafe.user.username;
+        } else {
+            var tg_name = 'Тестер';
+            var tg_id = 641638479;
+            var tg_username = 'browser';
+        }
+
+        const initTelegramWebApp = () => {
+            const tg = window.Telegram?.WebApp || window.TelegramWebviewProxy;
+            
+            if (window.Telegram && window.Telegram.WebApp.initDataUnsafe.user) {
+                // Основные настройки
+                tg.expand();
+                tg.ready();
+                tg.enableClosingConfirmation();
+
+                // Установка цветов
+                const headerColor = '#181818';
+                const backgroundColor = '#000';
+
+                const setHeaderColor = (headerColor) => {
+                    const data = JSON.stringify({ color: headerColor });
+                    tg?.setHeaderColor?.(headerColor) || 
+                    tg?.postEvent?.('web_app_set_header_color', data) || 
+                    window.parent.postMessage({ 
+                        eventType: 'web_app_set_header_color', 
+                        eventData: { color: headerColor } 
+                    }, '*');
+                };
+
+                const setBackgroundColor = (bgColor) => {
+                    const data = JSON.stringify({ color: bgColor });
+                    tg?.setBackgroundColor?.(bgColor) || 
+                    tg?.postEvent?.('web_app_set_background_color', data) || 
+                    window.parent.postMessage({ 
+                        eventType: 'web_app_set_background_color', 
+                        eventData: { color: bgColor } 
+                    }, '*');
+                };
+
+                setHeaderColor(headerColor);
+                setBackgroundColor(backgroundColor);
+
+                // Проверяем поддержку нового API для отключения свайпов
+                if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+                    // Используем новое API если доступно
+                    tg.disableVerticalSwipes?.();
+                } else {
+                    // Используем альтернативное решение для старых версий
+                    const overflow = 100;
+                    document.body.style.overflowY = 'hidden';
+                    document.body.style.marginTop = `${overflow}px`;
+                    document.body.style.height = window.innerHeight + overflow + "px";
+                    document.body.style.paddingBottom = `${overflow}px`;
+                    window.scrollTo(0, overflow);
+
+                    let touchStartY;
+
+                    const onTouchStart = (e) => {
+                        touchStartY = e.touches[0].clientY;
+                    };
+
+                    const onTouchMove = (e) => {
+                        const scrollableEl = document.querySelector('.scrollable');
+                        if (scrollableEl) {
+                            const scroll = scrollableEl.scrollTop;
+                            const touchY = e.changedTouches[0].clientY;
+                            if (scroll <= 0 && touchStartY < touchY) {
+                                e.preventDefault();
+                            }
+                        } else {
+                            e.preventDefault();
+                        }
+                    };
+
+                    document.documentElement.addEventListener('touchstart', onTouchStart, { passive: false });
+                    document.documentElement.addEventListener('touchmove', onTouchMove, { passive: false });
+                }
+
+                // Обработчик закрытия
+                window.addEventListener('beforeunload', (e) => {
+                    if (!tg.isClosingConfirmationEnabled) {
+                        e.preventDefault();
+                        e.returnValue = 'Вы уверены, что хотите закрыть приложение?';
+                        
+                        const confirmed = confirm('Вы уверены, что хотите закрыть приложение?');
+                        if (!confirmed) {
+                            e.preventDefault();
+                            return e.returnValue;
+                        }
+                    }
+                });
+
+                // Обработчик ошибок
+                window.addEventListener('error', (e) => {
+                    console.error('Ошибка в WebApp:', e.message);
+                });
+            } else {
+                console.log('Это не WebApp или пользователь не авторизован');
+            }
+        };
+
+        initTelegramWebApp();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
     <script src="https://files.salebot.pro/uploads/file_item/file/192012/logicer.js"></script>
