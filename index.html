@@ -204,22 +204,22 @@
         <sl-button class="wheel-btn" variant="primary" size="medium" style="width: 100%; margin-bottom: 1rem;" onClick="startSpin();">Испытать удачу</sl-button>
     </section>
 
-    <section id="wheel-no-spins" style="display: block; text-align: center;">
-        <div class="wheel_title" style="text-align: center; margin-bottom: 40px;">
+    <section id="wheel-no-spins" style="display: block; text-align: left;">
+        <div class="wheel_title" style="margin-bottom: 40px;">
             <h1>Нет доступных <span class="accent-word">прокрутов</span></h1>
             <p>Но ты можешь их получить за приглашенных друзей</p>  
         </div>
+    </section>
+
+    <section id="wheel-ref" style="display: block;">
         <div class= "ref-btn-block" style="display: flex; align-items: center; gap: 10px;justify-content: center;">
-            <sl-button onclick="shareRefToTelegram()">Пригласить друга</sl-button>
-            <sl-copy-button value="Shoelace rocks!"></sl-copy-button>
+            <sl-button style="width: 100%;" onclick="shareRefToTelegram()">Пригласить друга</sl-button>
+            <sl-copy-button copy-label="Скопировать ссылку" success-label="Ссылка скопирована" value="https://t.me/bot_name?start=ref_id"></sl-copy-button>
         </div>
-        <sl-menu disabled style="text-align: left; margin: 20px auto;">
+        <sl-menu style="text-align: left; margin: 20px auto; pointer-events: none;">
             <sl-menu-label>Статистика</sl-menu-label>
             <sl-menu-item>Пригласил друзей<sl-badge slot="suffix" variant="neutral" pill>4</sl-badge></sl-menu-item>
         </sl-menu>
-    </section>
-
-    <section id="wheel-ref" style="display: none;">
     </section>
 
     <script>
